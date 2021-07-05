@@ -1,0 +1,48 @@
+#!/bin/bash
+
+hlpmsg="USAGE: $0 < presuffix or - > < the first index > < suffix or - >
+EXAPLE1: $0 - 1 -
+EXAPLE2: $0 House.S01.E 1 .720p.eng.rus"
+
+if [ -z $1 ]
+    then
+        psfx=''
+        ndx=1
+        sfx=''
+    else
+        if [ -z $3 ]
+            then
+                echo $hlpmsg && exit 1
+            else
+                [ $1 == '-' ] && psfx='' || psfx=$1
+                ndx=$2
+                [ $3 == '-' ] && sfx='' || sfx=$1
+        fi
+fi
+
+
+((ndx--))
+
+shopt -s nullglob # To avoid expantion to *.extention
+for vf in *.mp4 *.mkv *.avi
+do
+    ((ndx++))
+    [ $ndx -le 9 ] && nndx="0$ndx" || nndx=$ndx
+    nfn="$psfx$nndx$sfx"
+    nfndx=-1
+    while [[ -f $nfn ]]
+    do
+        ((nfndx++))
+        nfn="$nfn_$nfndx"
+    done
+    mv "$vf" "$nfn.${vf##*.}"
+
+    # rename subtitle files.
+    vfn=${vf%.*}
+    for sbsfx in srt ass
+    do
+        sbf="$vfn.$sbsfx"
+        [ -f "$sbf" ] && mv "$sbf" "$nfn.${sbf##*.}"
+    done
+
+done

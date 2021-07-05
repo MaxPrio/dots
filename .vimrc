@@ -87,7 +87,6 @@ call plug#end()
     set cmdheight=2
     set showcmd             " show command in bottom bar
     set so=7    "Set 7 lines to the cursor
-    "set cursorline          " highlight current line
     set wildmenu            " visual autocomplete for command menu
     "set list               "show hidden chars
     set listchars=tab:▱▱,eol:¬,trail:~,space:‿
@@ -126,9 +125,9 @@ call plug#end()
     inoremap jk <esc>
     vnoremap jk <esc>
     "toggle hidden chars.
-    nnoremap <C-l> :set list!<CR>
+    nnoremap <silent><leader>hl :set list!<CR>
     "unhighlight
-    nnoremap <A-l> :nohlsearch<CR>
+    nnoremap <silent><leader>sl :nohlsearch<CR>
     "buffer list
     nnoremap ]b :bn<CR>
     nnoremap [b :bp<CR>

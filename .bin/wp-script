@@ -1,0 +1,732 @@
+#!/bin/bash
+
+# Wallpaper downloader and manager.
+
+# USAGE: wp-script COMMAND [q]
+
+    # commands:           change
+    #                     save    (include the current wallpaper in the local recycle set.)
+    #                     unsave
+    #                     remove  (unsave and change)
+    #                     info    (show the status of the current wp.)
+
+    #                     timerOn             start timer with previous, or default trigger.
+    #                     timer={OnCalendar}  set the trigger in 'OnCalendar' formar.
+    #                     timerOff            stop timer.
+
+    # extra parameters  : q       qiuet flag (for cron etc.)
+
+# DEPENDS ON: wget,feh.
+
+# CONFIGURATION through the shared veriables.
+
+##########################################################################
+
+# SHORT DESCRIPTION:
+    # wp-script change : Sets up symlink file ("WP_CRNT") for the next wallpaper image.
+    #                    Either a random image from local set,
+    #                    or downloading a new image from internet source (currently just unsplash).
+    #                    Sets up wallpaper, through the link.
+    
+    #                    File name format of a new image file   - SOURCE.TAG1_TAGn.wp
+    #                    File name format of a saved image file - TAG1_TAGn.INDEX.wp
+
+    #                    While downloading, a random tagset from "WP_THM_DFLT" string is used.
+    #                    If there is a file in the download directory, with the same name
+    #                    (the same source and tagset), it will be removed.
+
+    #                    If WP_NCH='auto', then chance of a new download depends entirely
+    #                    on how many images are yet to be saved to reach the maximum amount.
+    #                    If WP_NCH=[0-100], then that is the minimum chance. And there is no limit to
+    #                    the number of saved images.
+
+
+    # wp-script save   : If needed, renames the current wp and moves it to the "WP_DIR" directory.
+    #                    If there is the file with the same name, reindexes files with the same tagset.
+    #                    Resets the symlink for the current wp.
+    
+    # wp-script unsave : If needed, renames the current wp and moves it to the "WP_DL_DIR" directory.
+    #                    File name format - TAG1_TAGn.removed.wp
+    #                    If there is a file in the download directory, with the same name (the same tagset),
+    #                    it will be removed.
+
+    # wp-script remove : Shortcut for "wp-script unsave" followed by "wp-script change"
+
+    # wp-script info   : Print out the status of the current wallpaper image file.
+
+# WARNING: If executed as cron job, feh needs DISPLAY to be pointed at.
+
+# !!! No need to use crontab, with systemd timer functionality included
+# CRONTAB(crontab -e):
+#          add to the crontab:
+#                               SHELL=/bin/bash
+#                               PATH={/PATH/TO/THE/SCRIPT}:{$PATH}
+#
+#          the every hour crontab line:
+#                               0 * * * * wp-script change q
+
+# SUGGESTED ALIASES:
+    # alias wpwp='wp-script'
+    # alias wpwpi='wp-script info'
+    # alias wpwpc='wp-script change'
+    # alias wpwps='wp-script save'
+    # alias wpwpus='wp-script unsave'
+    # alias wpwpr='wp-script remove'
+
+##########################################################################
+
+# Shared variables
+#==================
+WP_U=$USER
+
+# The local directory for saved images.
+WP_DIR=/home/"$WP_U"/Pictures/Wallpapers
+
+# The local directory for new images.
+WP_DL_DIR=/home/"$WP_U"/Pictures/Downloads
+
+# The symbolic link file, leading to the image of the current wallpaper.
+WP_CRNT=/home/"$WP_U"/.wallpaper
+
+# Preferred size.
+WP_SZ='1920x1080'
+
+# chance (%) of a new download, while changing current wp. 0-100 or 'auto'
+WP_NCH='auto'
+#WP_NCH=50
+
+# maximum amount of saved wallpapers.
+    # It can not be exceeded if WP_NCH='auto', otherwise no limit.
+WP_MAX_VL=100
+
+# Image tags used while searching for new wallpapers.
+    # format: '+' AND (join tags in a tagset)
+    #         '*' OR (separate tagsets)
+    # example: 'mountains+river*mountains*river*nature*nature+people'
+WP_THM_DFLT='random*nature*mountains*animals*woods*osean*shore*river*space*abstract*landscape*sport*people*architecture'
+
+
+# TIMER VARIABLES
+#=================
+
+#SELF_REF_NAME='wp-script'
+EXEC_PATH=$(readlink -f "$0")
+EXEC_PARAMS='change q'
+SELF_REF_NAME="$(basename $EXEC_PATH)"
+SERVICE_DIR="$HOME/.config/systemd/user"
+SERVICE_FILE="$SELF_REF_NAME.service"
+TIMER_FILE="$SELF_REF_NAME.timer"
+ENV_CONF_DIR="$HOME/.config/environment.d"
+ENV_CONF_FILE="environment-vars.conf"
+ENV_VARS='DISPLAY'
+#ENV_VARS='PATH DISPLAY XAUTHORITY'
+
+ONCALENDAR_DFLT='hourly' # OnCalendar format
+# OnCalendar trigger
+#-----------
+# General format: DayOfWeek Year-Month-Day Hour:Minute:Second
+#         list:  val1,val3,val5
+#         range: val1..val5
+# example: Mon,Tue *-*-01..04 12:00:00
+#          the first four days of each month at 12:00 PM, but only if that day is a Monday or a Tuesday.
+
+#      minutely → *-*-* *:*:00
+#        hourly → *-*-* *:00:00
+#         daily → *-*-* 00:00:00
+#       monthly → *-*-01 00:00:00
+#        weekly → Mon *-*-* 00:00:00
+#        yearly → *-01-01 00:00:00
+#     quarterly → *-01,04,07,10-01 00:00:00
+#  semiannually → *-01,07-01 00:00:00
+
+#####################
+
+# FUNCTIONS
+#==========
+
+# sources
+#-----------
+
+wp_get_unsplash () {
+# Downloads a random image from unsplash, with parameters as tags.
+# USAGE EXAPLE:  wp_get_unsplash nature animal
+
+    TAGS=$(echo $@ | tr "\ " , ) # all parameters as tags, sepatated by ','.
+    WP_FN="unsplash.$(echo $TAGS | tr , _).wp" # filename - "unsplash.tag1_tag2_tagn.wp" .
+    WP_FP=$(echo "${WP_DL_DIR}/$WP_FN" )
+    [[ -f $WP_FP ]] && rm $WP_FP 
+
+
+    if wget -O $WP_FP "https://source.unsplash.com/$WP_SZ/?$TAGS"  > /dev/null 2>&1
+        then
+            echo $WP_FP 
+        else
+            [[ -f $WP_FP ]] && rm $WP_FP 
+        fi
+}
+
+# TOOLS
+# (functions that are not sopposed to be involved directly.)
+#==========
+
+wp_massage () {
+
+    if [[ $WP_QUIET = '0' ]]
+    then
+        nc="$(tput sgr0)"
+        red="$(tput setaf 1)"
+        green="$(tput setaf 2)"
+        yellow="$(tput setaf 3)"
+
+
+        local clnt sprt sprt_c c_sprt lgp sgp
+
+        case $1 in
+            1 )
+                sprt_c=$green ;;
+           -1 )
+                sprt_c=$red ;;
+            0 )
+                sprt_c=$yellow ;;
+            esac
+        sprt='==>' # The separator
+        c_sprt="$sprt_c$sprt$nc"    
+
+        clnt="${FUNCNAME[1]}" # The client function name.
+
+        # The spase gap starting every additional massage line.
+        lgp=$((${#clnt} + ${#sprt} + 2))
+        sgp=''
+        while [[ ${#sgp} -lt $lgp ]]
+            do
+                sgp=" $sgp"
+            done
+
+        # A multiline sed replacement trick.
+        # The sed reads the whole massage (file), then the replacement.
+        echo -e "$clnt" "$c_sprt" "$2" | sed -e ':a' -e 'N' -e '$!ba' -e "s/\n/\n$sgp/g"
+    fi
+}
+
+wp_set_up () {
+# Links the given image to $WP_CRNT,
+# and sets up the link as the desktop background, using feh.
+
+    if [[ -f $1 ]]
+        then
+            ln -sf $1 $WP_CRNT
+            #DISPLAY=:0 feh --no-fehbg --bg-fill $WP_CRNT # DISPLAY is necessary for cron job.
+             feh --no-fehbg --bg-fill $WP_CRNT
+        fi
+}
+
+#------------
+wp_reindx () {
+# fixis the broken indexes.
+    NINDX=0
+    for wpf in $WP_DIR/$1.*.$2
+    do
+        mv $wpf $WP_DIR/$1.$NINDX.$2
+        ((NINDX++))
+    done
+}
+
+#------------
+wp_indx () {
+# Adds index to the given filename.
+
+    WP_TAGS=${1%.*}
+    EXN=${1##*.}
+    INDX=$(ls -1 $WP_DIR/$WP_TAGS.*.$EXN 2>/dev/null | wc -l )
+    FNAME="$WP_TAGS.$INDX.$EXN"
+    [[ -f  "$WP_DIR/$FNAME" ]] && wp_reindx $WP_TAGS $EXN
+    echo "$FNAME"
+}
+
+#------------
+wp_unsave_crnt () {
+# if the current wallpaper is in standard wallpaper direcrory,
+# then moves it out, and relinks it.
+
+    WP_P=$(realpath $WP_CRNT)
+    WP_D=${WP_P%/*}
+    if [ $WP_D = $WP_DIR ]
+        then
+            FN=$(tmpfn=${WP_P##*/};echo "removed.${tmpfn%.*.*}.${tmpfn##*.}")
+            [[ -f  "$WP_DL_DIR/$FN" ]] && rm "$WP_DL_DIR/$FN"
+            [[ -f $WP_CRNT ]] && rm $WP_CRNT
+            wp_massage 1 "Removed the softlink file - $WP_CRNT"
+            mv $WP_P "$WP_DL_DIR/$FN"
+            wp_massage 1 "Moved the current wallpaper file to the local wp-temp direcrory: $WP_DL_DIR\nThe filename is - $FN"
+            ln -s "$WP_DL_DIR/$FN" $WP_CRNT
+            wp_massage 1 "Created the softlink file - $WP_CRNT"
+        else
+            wp_massage 1 "The current wallpaper file is not in the local wp-save.\nThe location is - $WP_P"
+        fi
+}
+
+#------------
+wp_save_crnt () {
+# If the current wallpaper is not in standard wallpaper direcrory,
+# then moves and relinks it.
+    WP_P=$(realpath $WP_CRNT)
+    WP_D=${WP_P%/*}
+    if [ $WP_D != $WP_DIR ]
+        then
+            FN=$(tmpfn=${WP_P##*/};echo ${tmpfn#*.})
+            FN_INDX=$(wp_indx $FN)
+            [[ -f $WP_CRNT ]] && rm $WP_CRNT
+            echo
+            wp_massage 1 "Removed the softlink file - $WP_CRNT"
+            mv $WP_P "$WP_DIR/$FN_INDX"
+            wp_massage 1 "Moved the current wallpaper to the local wp-save direcrory: $WP_DIR\nThe filename is - $FN_INDX"
+            ln -s "$WP_DIR/$FN_INDX" $WP_CRNT
+            wp_massage 1 "Created the softlink file - $WP_CRNT"
+            wp_cmd_info
+        else
+            wp_massage 0 "No need to save the cuttent wp, the file is in $WP_D\nThe filename is - ${WP_P##*/}"
+            wp_cmd_info
+        fi
+}
+
+
+#------------
+wp_new_yn () {
+# BOOLEAN
+# Simle random choise, based on given chance of a new download,
+
+local CHOICE
+# check exeptional conditions:
+[[ $WP_LVL -eq 0 ]] && CHOICE=1
+[[ $WP_MAX_VL -lt 0 ]] && CHOICE=1
+[[ $WP_LVL -gt $((WP_MAX_VL - 1)) ]] && CHOICE=0
+# if none above, then:
+if [[ -z $CHOICE ]]
+    then
+        if [[ $WP_NCH -eq 0 ]]
+        then
+            CHOICE=0
+        else
+            if [[ $(( (RANDOM % 100 ) + 1 )) -gt $WP_NCH ]]
+                then
+                    CHOICE=0
+                else
+                    CHOICE=1
+                fi
+        fi
+    fi
+
+echo $CHOICE
+}
+
+
+
+#------------
+wp_local_pick () {
+# A simple random pick up of a local wp.
+    AMNT=$(ls $WP_DIR | wc -l )
+    WP_N=$(((RANDOM % $AMNT) + 1))
+    WP_NEW=$(echo "$WP_DIR/$(ls $WP_DIR| head -n $WP_N | tail -n 1)")
+    WP_OLD=$(realpath $WP_CRNT)
+    [[ $WP_NEW = $WP_OLD ]] &&
+        wp_cmd_change ||
+        echo "$WP_NEW"
+}
+
+#------------
+wp_dflt_theme_pick () {
+    AMNT=$(echo $WP_THM_DFLT | tr \* '\n' | wc -l )
+    TH_N=$(((RANDOM % $AMNT) + 1))
+    echo $WP_THM_DFLT | tr +\* ' \n' | head -n $TH_N | tail -n 1
+}
+
+#------------
+wp_src_pick () {
+    echo 'wp_get_unsplash'
+}
+
+# COMMANDS
+#==========
+
+wp_cmd_info () {
+
+    if [[ $WP_QUIET = '0' ]]
+    then
+        nc="$(tput sgr0)"
+        red="$(tput setaf 1)"
+        green="$(tput setaf 2)"
+        yellow="$(tput setaf 3)"
+        blue="$(tput setaf 4)"
+
+        local cwpp cwpd cwpfn savestr lcl_lvl
+        cwpp=$(realpath $WP_CRNT)
+        cwpfn=${cwpp##*/}
+        cwpd=${cwpp%/*}
+        [[ $cwpd = $WP_DIR ]] && savestr="${green}SAVE$nc (in the local resycle set)" || savestr="${red}UNSAVE$nc (wont be used again.)"
+        lcl_lvl=$(ls -1 $WP_DIR | wc -l ) # current amount of local wps.
+
+        echo
+        echo "${yellow}WP-SCRIPT INFO:$nc"
+        echo "   The current file : ${blue}$cwpfn$nc"
+        echo "  The current status: $savestr"
+        echo "         total saved: ${green}$lcl_lvl${nc}/${blue}$WP_MAX_VL$nc"
+        echo -n "${yellow}              timer $nc:"
+        echo "$( timer-status | sed 's/^[^:]*://' )"
+    fi
+}
+
+wp_cmd_change () {
+
+    if [[ $(wp_new_yn) -eq 1 ]]
+        then
+            SRC_WP=$(wp_src_pick)
+            THM_WP=$(wp_dflt_theme_pick)
+            wp_massage 0 "downloading a new image.\n   from: ${SRC_WP#wp_get_}\n   tags: $THM_WP.\n....."
+            NEW_WP=$($SRC_WP $THM_WP)
+            if [[ ! -f $NEW_WP ]]
+                then
+                    wp_massage -1 "FAIL to download."
+                    NEW_WP=$(wp_local_pick)
+                fi
+        else
+            wp_massage 0 "picking up a local image..."
+            NEW_WP=$(wp_local_pick)
+        fi
+    
+    if [[ ! -f $NEW_WP ]]
+        then
+            wp_massage -1 "FAIL to determine a new wp image."
+        else
+            wp_set_up $NEW_WP
+            wp_massage 1 "DONE!"
+            wp_cmd_info
+        fi
+}
+
+
+wp_cmd_save () {
+    wp_save_crnt
+}
+
+wp_cmd_unsave () {
+    wp_unsave_crnt
+}
+
+wp_cmd_remove () {
+    wp_unsave_crnt
+    wp_cmd_change
+}
+
+#################
+# SYSTEMD TIMER
+#################
+
+# TIMER FANCTIONS
+#=================
+
+timer-create-files () {
+  if [ ! -d $SERVICE_DIR ]
+    then
+      #massage
+      wp_massage 0 "The directory for local systemd services does not exist.\nCreating '$SERVICE_DIR'..."
+      mkdir -p $SERVICE_DIR
+  fi
+
+  #massage
+  wp_massage 0 "Creating '$SERVICE_FILE' file. ...\n(Exec line: 'ExecStart=$EXEC_PATH $EXEC_PARAMS')"
+  printf '%s\n' \
+    "[Unit]" \
+    "Description=Changes wallpaper with  $SELF_REF_NAME script." \
+    "Wants=$SELF_REF_NAME.timer" \
+    "" \
+    "[Service]" \
+    "Type=oneshot" \
+    "ExecStart=$EXEC_PATH $EXEC_PARAMS" \
+    "" \
+    "[Install]" \
+    "WantedBy=default.target" \
+    > $SERVICE_DIR/$SERVICE_FILE
+
+  #massage
+  wp_massage 0 "Creating '$TIMER_FILE' file.\n(OnCalendar=$ONCALENDAR_DFLT) ..."
+  printf '%s\n' \
+    "[Unit]" \
+    "Description=Timer for  $SELF_REF_NAME service." \
+    "" \
+    "[Timer]" \
+    "OnCalendar=$ONCALENDAR_DFLT" \
+    "RandomizedDelaySec=60" \
+    "" \
+    "[Install]" \
+    "WantedBy=timers.target" \
+    > $SERVICE_DIR/$TIMER_FILE
+
+  if [ ! -d $ENV_CONF_DIR ]
+    then
+      #massage
+      wp_massage 0 "The directory for local systemd environment configs, does not exist.\nCreating '$ENV_CONF_DIR'..."
+      mkdir -p $ENV_CONF_DIR
+  fi
+ [ -f "$ENV_CONF_DIR/$ENV_CONF_FILE" ] \
+   && echo '' >  "$ENV_CONF_DIR/$ENV_CONF_FILE"
+  local env_var_line
+  for env_var in $ENV_VARS
+    do
+      env_var_line=$(eval echo "$env_var=\${$env_var}")
+      #massage
+      wp_massage 0 "Adding '$env_var_line line, to '$ENV_CONF_FILE' file. ..."
+      echo "$env_var_line" >> "$ENV_CONF_DIR/$ENV_CONF_FILE"
+  done
+}
+
+
+timer-files-exist () {
+  [ -f $SERVICE_DIR/$SERVICE_FILE ] \
+    && [ -f $SERVICE_DIR/$TIMER_FILE ]
+}
+
+timer-set-OnCalendar () {
+  local timer_val
+  timer_val=$1
+  sed -i "/OnCalendar=/ s/^.*$/OnCalendar=$timer_val/" $SERVICE_DIR/$TIMER_FILE
+  systemctl --user daemon-reload
+}
+
+timer-set-env-vars () {
+
+  local env_var sysd_var sysd_var_line bash_var export_var daemon_reload
+
+  daemon_reload=false
+
+  # massage
+  wp_massage 0 "Checking local systemd envitonment variables ..."
+  for env_var in $ENV_VARS
+  do
+    export_var=false
+    eval bash_var=\${$env_var}
+    sysd_var_line=$( systemctl --user show-environment | grep "$env_var" )
+    if [ ! -z $sysd_var_line ]
+      then
+        sysd_var="${sysd_var_line#*=}"
+        if [ "$sysd_var" == "$bash_var" ]
+          then
+            # massage
+            wp_massage 1 "'$env_var' var is valid."
+          else
+            # massage
+            wp_massage -1 "'$env_var' var is not valid."
+            export_var=true
+        fi
+      else
+        # massage
+        wp_massage -1 "'$env_var' var is not found."
+        export_var=true
+    fi
+    if $export_var
+      then
+        # massage
+        wp_massage 0 "Importing '$env_var' var, from bash environment ... "
+        systemctl --user import-environment "$env_var"
+
+        if command -v dbus-update-activation-environment >/dev/null 2>&1
+          then
+            dbus-update-activation-environment "$env_var"
+        fi
+      $daemon_reload || daemon_reload=true
+    fi
+  done
+
+  if $daemon_reload
+    then
+       massage
+      wp_massage 0 "Reloading the service daemon. ..."
+      systemctl --user daemon-reload
+  fi
+}
+
+timer-service-isenabled () {
+  systemctl --user status $SERVICE_FILE 2> /dev/null \
+      | grep 'enabled;' > /dev/null 2>&1
+}
+
+timer-isenabled () {
+  systemctl --user status $TIMER_FILE 2> /dev/null  \
+      | grep 'enabled;' > /dev/null 2>&1
+}
+
+timer-isactive () {
+  systemctl --user list-timers \
+    | grep " $TIMER_FILE " > /dev/null 2>&1
+}
+
+timer-start () {
+  timer-set-env-vars
+  if ! timer-isactive
+    then
+      # massage
+      wp_massage 0 "The timer is not active.\nStarting the service..."
+      if ! timer-service-isenabled
+        then
+        # massage
+        wp_massage 0 "Enabling $SERVICE_FILE ..."
+        systemctl --user enable $SERVICE_FILE
+      fi
+      if ! timer-isenabled
+        then
+          # massage
+          wp_massage 0 "Enabling $TIMER_FILE ..."
+          systemctl --user enable $TIMER_FILE
+      fi
+      # massage
+      wp_massage 0 "Starting $TIMER_FILE ..."
+      systemctl --user start $TIMER_FILE
+  fi
+}
+
+timer-stop () {
+  if timer-isactive
+    then
+      # massage
+      wp_massage 0 "Stopping $TIMER_FILE ..."
+      systemctl --user stop $TIMER_FILE
+    else
+      # massage
+      wp_massage 0 "$TIMER_FILE is not active ..."
+  fi
+  if timer-isenabled
+    then
+      # massage
+      wp_massage 0 "Disabling $TIMER_FILE ..."
+      systemctl --user disable $TIMER_FILE
+    else
+  # massage
+  wp_massage 0 "$TIMER_FILE is disabled ..."
+  fi
+}
+
+timer-status () {
+
+  nc="$(tput sgr0)"
+  red="$(tput setaf 1)"
+  green="$(tput setaf 2)"
+  yellow="$(tput setaf 3)"
+  blue="$(tput setaf 4)"
+
+  local timer_val timer_status
+  if timer-isactive
+    then
+      timer_val=$(sed -n '/OnCalendar/ s/^.*=\(.*\)$/\1/p' $SERVICE_DIR/$TIMER_FILE )
+      timer_next=$(systemctl --user status $TIMER_FILE \
+        | grep Trigger: \
+        | sed 's/^.*Trigger://' )
+      timer_status="${green}ON${nc} ($timer_val). ${yellow}Next${nc}: $timer_next"
+    else
+      timer_status="${red}OFF${nc}"
+  fi
+  echo "TIMER: $timer_status"
+}
+
+
+# TIMER COMMANDS
+#=================
+
+wp-cmd-timerOn () {
+  # massage
+  wp_massage 0 "Checking the timer service config files. ..."
+  ! timer-files-exist \
+    && timer-create-files
+  if [ ! -z "$1" ]
+    then
+      local oncalendar
+      oncalendar="$1"
+      # massage
+      wp_massage 0 "Setting up 'OnCalenar=$oncalendar' in $TIMER_FILE file ..."
+      timer-set-OnCalendar "$oncalendar"
+  fi
+  timer-start
+  timer-status
+}
+
+wp-cmd-set-timer () {
+  wp-cmd-timerOn "$1"
+}
+
+wp-cmd-timerOff () {
+  timer-stop
+  timer-status
+}
+
+#################
+
+# ACTION
+#=========
+[[ ! -d $WP_DIR ]] && mkdir -p $WP_DIR
+[[ ! -d $WP_DL_DIR ]] && mkdir -p $WP_DL_DIR
+
+# current amount of local wps.
+WP_LVL=$(ls -1 $WP_DIR | wc -l )
+
+# if needed, calculate the chance of a new download.
+if [[ $WP_NCH = 'auto' ]]
+    then
+        WP_NCH=$(( 100 - ($WP_LVL * 100 / $WP_MAX_VL )))
+    fi
+
+# the quiet flag
+[[ $2 = 'q' ]] &&
+    WP_QUIET='1' ||
+    WP_QUIET='0'
+
+wp-dispatcher () {
+
+  local wp_cmd oncalendar
+
+  wp_cmd="$1"
+
+  # if no command
+  [[ -z "$wp_cmd" ]] \
+    && wp_cmd='info'
+  # a thin chanse, but who knows.
+  [[ "$wp_cmd" = 'set-timer' ]] \
+    && wp_cmd='set_timer'
+
+  if [[ "$wp_cmd" =~ ^timer=.*$ ]]
+    then
+      oncalendar="${1#timer=}"
+      systemd-analyze calendar "$oncalendar" > /dev/null 2>&1 \
+        && wp_cmd='set-timer' \
+        || wp_massage -1 "The timer value '$oncalendar' is not an 'OnCalendar' timestamp."
+  fi
+
+        case $wp_cmd in
+            'info' )
+                wp_cmd_info
+                ;;
+            'change' )
+                wp_cmd_change
+                ;;
+            'save' )
+                wp_cmd_save
+                ;;
+            'unsave' )
+                wp_cmd_unsave
+                ;;
+            'remove' )
+                wp_cmd_remove
+                ;;
+            'set-timer' )
+                wp-cmd-set-timer "$oncalendar"
+                ;;
+            'timerOn' )
+                wp-cmd-timerOn
+                ;;
+            'timerOff' )
+                wp-cmd-timerOff
+                ;;
+            * )
+                wp_massage -1  "Unknown command '$wp_cmd'" ;;
+            esac
+}
+
+wp-dispatcher "$1"
+

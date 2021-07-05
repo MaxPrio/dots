@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# Youtube playlist player.
+
+# USAGE: yt-playlist-plater [-e|--edit] [NAME] [NUMBER]
+#   -no parameters: fuzzy match a playlist name, and print out editable comand line.
+#   -[-e|--edit]:   open the playlists file in editor.
+#   -[NAME]:        playlist name, to play the next episode (if no [NUMBER]).
+#   -[NUMBER]:      number of episodes to skip, or go back (-).
+#
+#   Playlist file line format: NAME URL FIRST CURRENT LAST
+#       (FIRST may be greater than LAST.)
+
+# DEPENDS 0N: youtube-dl, mpv, fzf.
+
+# ALIAS: alias yplp='yt-playlist-player'
+
+PLLSTSF=~/.config/yt-playlist-player.lst
+[ ! -f $PLLSTSF ] && echo "ERROR: Can not find $PLLSTSF" && exit 1 
+
+if [ -z $1 ]
+then
+    GNAME=$( cat $PLLSTSF | grep -o '^\S*' | fzf )
+    echo -n 'EXECUTING: '
+    read -i " yt-playlist-player $GNAME" -e CMDLINE
+    $CMDLINE
+elif [ $1 == "-e" ] || [ $1 == "--edit" ]
+then
+    $EDITOR $PLLSTSF
+else
+    read PLNAME PLURL PLIFST PLICR PLILST <<< $(cat $PLLSTSF | grep ^"$1" )
+
+    [ -z $PLNAME ] && \
+        echo "No such a playlist name." && exit 1
+
+    [ ! -z $2 ] && SKP=$2 || SKP=0
+    if [ $PLIFST -lt $PLILST ]
+    then
+        PLIMIN=$PLIFST
+        PLIMAX=$PLILST
+        PLICR=$((PLICR + SKP))
+    else
+        PLIMAX=$PLIFST
+        PLIMIN=$PLILST
+        PLICR=$((PLICR - SKP))
+    fi
+    # Cheking boundaries:
+    [ $PLICR -lt $PLIMIN ] && PLICR=$PLIMIN
+    [ $PLICR -gt $PLIMAX ] && PLICR=$PLIMAX
+
+    echo "Playing: $PLNAME   $PLICR > $PLILST"
+
+    youtube-dl \
+        --playlist-start $PLICR \
+        --playlist-end $PLICR \
+        --write-sub --embed-subs --sub-lang en \
+        -o - $PLURL | mpv -
+
+    if [ $PLICR -eq $PLILST ]
+    then
+        PLICR=$PLIFST
+        echo
+        echo "THAT WAS THE LAST EPISODE !!!"
+        echo "Playing the first one, the next time."
+        echo
+    else
+        [ $PLICR -gt $PLILST ] && ((PLICR--)) || ((PLICR++))
+    fi
+    sed -i "/^$1/ s/^\(.*\ .*\ .*\ \).*\(\ .*\)$/\1$PLICR\2/" $PLLSTSF
+    echo "Next time: $PLNAME   $PLICR > $PLILST"
+fi
+

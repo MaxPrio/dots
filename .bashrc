@@ -44,4 +44,5 @@ gpg-connect-agent updatestartuptty /bye >/dev/null
 # dots: a bare git repository for config files
 alias dots='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME'
 alias dotss='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME status'
+alias dotsc='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME commit -m '
 alias dotsp='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME push github main'
