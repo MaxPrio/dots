@@ -1,0 +1,254 @@
+    <!-- 
+    INSERTED KEYBINDING ENTERIES
+    -->
+    <!--
+         
+     Keybindings for widow actions
+     -->
+    <!--
+    close -->
+    <keybind key="C-q">
+      <action name="Close"/>
+    </keybind>
+    <!--
+         
+     Keybindings for running applications
+     -->
+    <!--
+    terminal -->
+    <keybind key="C-A-t">
+      <action name="Execute">
+        <command>urxvt</command>
+      </action>
+    </keybind>
+    <!--
+    file manager -->
+    <keybind key="C-A-e">
+      <action name="Execute">
+        <command>urxvt -e ranger</command>
+      </action>
+    </keybind>
+    <!--
+    launcher (rofi) -->
+    <keybind key="C-A-r">
+      <action name="Execute">
+        <command>rofi -show run </command>
+      </action>
+    </keybind>
+    <!-- 
+
+     Keybindings for window tiling
+     -->
+    <!--
+    fullscreen -->
+    <keybind key="F11">
+      <action name="ToggleFullscreen"/>
+    </keybind>
+    <!--
+    maximize -->
+    <keybind key="C-W-m">
+        <action name="ToggleMaximize"/>
+    </keybind>
+    <!--
+    horizonally centered
+    half hight down -->
+    <keybind key="W-A-Down">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>center</x>
+        <y>50%</y>
+        <width>75%</width>
+        <height>50%</height>
+      </action>
+    </keybind>
+    <!--
+    horizonally centered
+    half hight up -->
+    <keybind key="W-A-Up">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>center</x>
+        <y>0</y>
+        <width>75%</width>
+        <height>51%</height>
+      </action>
+    </keybind>
+    <!--
+    a big window in center -->
+    <keybind key="W-c">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>center</x>
+        <y>center</y>
+        <width>75%</width>
+        <height>75%</height>
+      </action>
+    </keybind>
+    <!--
+    horizonally centered
+    full hight wide -->
+    <keybind key="W-C-c">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>center</x>
+        <y>0</y>
+        <width>75%</width>
+        <height>100%</height>
+      </action>
+    </keybind>
+    <!--
+    horizonally centered
+    full hight narrow -->
+    <keybind key="W-A-c">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>center</x>
+        <y>0</y>
+        <width>50%</width>
+        <height>100%</height>
+      </action>
+    </keybind>
+    <!-- 
+     Half Screen
+    -->
+    <!-- 
+    half screen left -->
+    <keybind key="W-Left">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>0</x>
+        <y>0</y>
+        <height>100%</height>
+        <width>50%</width>
+      </action>
+    </keybind>
+    <!-- 
+    half screen right -->
+    <keybind key="W-Right">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>-0</x>
+        <y>0</y>
+        <height>100%</height>
+        <width>50%</width>
+      </action>
+    </keybind>
+    <!-- 
+    half screen up -->
+    <keybind key="W-Up">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>0</x>
+        <y>0</y>
+        <width>100%</width>
+        <height>51%</height>
+      </action>
+    </keybind>
+    <!-- 
+    half screen down -->
+    <keybind key="W-Down">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>0</x>
+        <y>-0</y>
+        <width>100%</width>
+        <height>51%</height>
+      </action>
+    </keybind>
+    <!-- 
+    Two squared
+    -->
+    <!-- 
+    up right -->
+    <keybind key="W-C-Up">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>0</x>
+        <y>0</y>
+        <width>50%</width>
+        <height>51%</height>
+      </action>
+    </keybind>
+    <!-- 
+    up left -->
+    <keybind key="W-C-Right">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>-0</x>
+        <y>0</y>
+        <width>50%</width>
+        <height>51%</height>
+      </action>
+    </keybind>
+    <!-- 
+    down right -->
+    <keybind key="W-C-Down">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>-0</x>
+        <y>-0</y>
+        <width>50%</width>
+        <height>51%</height>
+      </action>
+    </keybind>
+    <!-- 
+    down left -->
+    <keybind key="W-C-Left">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>0</x>
+        <y>-0</y>
+        <width>50%</width>
+        <height>51%</height>
+      </action>
+    </keybind>
+    <!--
+    "Side Panel"
+    -->
+    <!-- 
+    one third left-->
+    <keybind key="W-A-Left">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>0</x>
+        <y>0</y>
+        <width>34%</width>
+        <height>100%</height>
+      </action>
+    </keybind>
+    <!-- 
+    two thirds right-->
+    <keybind key="W-A-Right">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>-0</x>
+        <y>0</y>
+        <width>66%</width>
+        <height>100%</height>
+      </action>
+    </keybind>
+    <!-- 
+    two thirds right, half hight up -->
+    <keybind key="C-W-A-Up">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>-0</x>
+        <y>0</y>
+        <height>50%</height>
+        <width>66%</width>
+      </action>
+    </keybind>
+    <!-- 
+    two thirds right, half hight down -->
+    <keybind key="C-W-A-Down">
+      <action name="UnmaximizeFull"/>
+      <action name="MoveResizeTo">
+        <x>-0</x>
+        <y>-0</y>
+        <height>50%</height>
+        <width>66%</width>
+      </action>
+    </keybind>
+    <!-- 
+    END OF INSERTED KEYBINDING ENTERIES
+    -->

@@ -1,0 +1,37 @@
+   <!--    
+    INSERTED APPLICATION ENTRIES
+  -->
+    <application class="*">
+      <position force="no">
+        <x>center</x>
+        <y>center</y>
+      </position>
+      <size>
+        <width>75%</width>
+        <height>75%</height>
+      </size>
+      <decor>no</decor>
+    </application>
+
+    <application class="*" type="browser">
+      <position force="no">
+        <x>center</x>
+        <y>0</y>
+      </position>
+      <size>
+        <width>75%</width>
+        <height>100%</height>
+      </size>
+      <decor>no</decor>
+    </application>
+
+    <application class="*" type="dialog">
+      <position force="yes">
+      </position>
+      <decor>no</decor>
+    </application>
+    <!--    
+    END OF INSERTED APPLICATION ENTRIES
+      P.S. to learn a window class, use 'obxprop | grep "^_OB_APP"'
+  -->
+

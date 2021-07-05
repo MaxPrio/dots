@@ -1,0 +1,84 @@
+!===================
+URxvt*termName:         rxvt-256color
+URxvt*font: xft:Monospace:pixelsize=18
+!URxvt*geometry:	104x28
+URxvt*borderColor:      #000030
+URxvt*internalBorder:  8
+URxvt*scrollBar: false
+
+URxvt*perl-ext: matcher
+URxvt.perl-ext-common:font-size
+URxvt*url-launcher: chrome
+URxvt*matcher.button:     1
+
+URxvt*saveLines:        4095
+
+!Disables the insanely annoying Ctrl+Shift shortcut that enters ISO14755 mode
+URxvt.iso14755:         False
+
+!Colorscheme
+!----------
+! zenburn
+URxvt*xftAntialias: true
+URxvt*background: #3f3f3f
+URxvt*foreground: #dcdccc
+URxvt*cursorColor: #aaaaaa
+URxvt*colorUL: #366060
+URxvt*underlineColor: #dfaf8f
+URxvt*color0: #3f3f3f
+URxvt*color1: #cc9393
+URxvt*color2: #7f9f7f
+URxvt*color3: #d0bf8f
+URxvt*color4: #6ca0a3
+URxvt*color5: #dc8cc3
+URxvt*color6: #93e0e3
+URxvt*color7: #dcdccc
+URxvt*color8: #000000
+URxvt*color9: #dca3a3
+URxvt*color10: #bfebbf
+URxvt*color11: #f0dfaf
+URxvt*color12: #8cd0d3
+URxvt*color13: #dc8cc3
+URxvt*color14: #93e0e3
+URxvt*color15: #ffffff
+
+! Project:    Nord XResources
+!urxvt*foreground:   #D8DEE9
+!urxvt*background:   #2E3440
+!urxvt*cursorColor:  #D8DEE9
+!urxvt*fading: 35
+!urxvt*fadeColor: #4C566A
+!urxvt*color0: #3B4252
+!urxvt*color1: #BF616A
+!urxvt*color2: #A3BE8C
+!urxvt*color3: #EBCB8B
+!urxvt*color4: #81A1C1
+!urxvt*color5: #B48EAD
+!urxvt*color6: #88C0D0
+!urxvt*color7: #E5E9F0
+!urxvt*color8: #4C566A
+!urxvt*color9: #BF616A
+!urxvt*color10: #A3BE8C
+!urxvt*color11: #EBCB8B
+!urxvt*color12: #81A1C1
+!urxvt*color13: #B48EAD
+!urxvt*color14: #8FBCBB
+!urxvt*color15: #ECEFF4
+
+
+!transparency 
+!-------------
+!
+!For real transparency (composite):
+!urxvt*depth: 32
+!urxvt*background: rgba:0000/0000/0200/c800
+
+!For fake transparency:
+URxvt*inheritPixmap: true
+URxvt*transparent: true
+! URxvt*shading: 0 to 99 darkens, 101 to 200 lightens
+URxvt*shading:	16
+
+!Dont forget.
+!xrdb -merge ~/.Xresources
+!===================
