@@ -1,2 +1,0 @@
-# dots
-configs and scripts
