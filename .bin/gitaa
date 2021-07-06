@@ -1,0 +1,39 @@
+#!/bin/bash
+# A rapper for 'git add/rm' commands.
+
+usage () {
+  echo "USAGE: $0 [ dots ] [ m|d|all ]"
+}
+
+if [ $1 == dots ]
+  then
+    git_line="/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME"
+    shift
+    cd ~
+  else
+    git_line="/usr/bin/git"
+fi
+
+git-add () {
+  while read mfile
+    do
+      echo "Executing: $git_line $1 $mfile"
+      $git_line $1 $mfile
+  done < <( $git_line status | grep "$2" | tr -d '\ ' | sed 's/^[^:]*://' )
+}
+
+if [ -z $1 ] || [ $1 == all ]
+  then
+    git-add add modified
+    git-add rm deleted
+  else
+    case $1 in
+      m)  catch=modified
+          git_cmd=add ;;
+      d)  catch=deleted
+          git_cmd=rm ;;
+      *)  usage && exit 1 ;;
+    esac
+    git-add $git_cmd "$catch"
+fi
+

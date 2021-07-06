@@ -1,0 +1,4 @@
+# nvidia-ION
+yay -S nvidia-340xx
+# pass
+pacman -S xlcip pass

@@ -41,8 +41,13 @@ gpgconf --launch gpg-agent
 export GPG_TTY=$(tty)
 gpg-connect-agent updatestartuptty /bye >/dev/null
 
-# dots: a bare git repository for config files
+#git aliases
+alias gits='/usr/bin/git status'
+alias gitc='/usr/bin/git commit =m '
+alias gitp='/usr/bin/git push github main'
+# dots: a bare git repository for some (added) home directary files
 alias dots='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME'
 alias dotss='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME status'
 alias dotsc='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME commit -m '
 alias dotsp='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME push github main'
+alias dotsaa='gitaa dots'
