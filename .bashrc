@@ -17,6 +17,9 @@ export PATH="~/.bin:$PATH"
 #Prompt
 PS1='\[\e[01;38;5;240m\]\u\[\e[01;38;5;160m\]⚡\[\e[01;38;5;240m\]| \[\e[01;38;5;31m\]\w\[\e[01;38;5;240m\]\n↪        \[\e[01;38;5;28m\]\$ \[\033[00m\]'
 
+# primary aliases
+alias shtdn='shutdown -h now'
+
 # wp-script aliases
 alias wpwp='wp-script'
 alias wpwpi='wp-script info'

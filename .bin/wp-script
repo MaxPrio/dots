@@ -538,16 +538,16 @@ timer-set-env-vars () {
 
   if $daemon_reload
     then
-       massage
+      # massage
       wp_massage 0 "Reloading the service daemon. ..."
       systemctl --user daemon-reload
   fi
 }
 
-timer-service-isenabled () {
-  systemctl --user status $SERVICE_FILE 2> /dev/null \
-      | grep 'enabled;' > /dev/null 2>&1
-}
+#timer-service-isenabled () {
+#  systemctl --user status $SERVICE_FILE 2> /dev/null \
+#      | grep 'enabled;' > /dev/null 2>&1
+#}
 
 timer-isenabled () {
   systemctl --user status $TIMER_FILE 2> /dev/null  \
@@ -565,12 +565,12 @@ timer-start () {
     then
       # massage
       wp_massage 0 "The timer is not active.\nStarting the service..."
-      if ! timer-service-isenabled
-        then
-        # massage
-        wp_massage 0 "Enabling $SERVICE_FILE ..."
-        systemctl --user enable $SERVICE_FILE
-      fi
+      #if ! timer-service-isenabled
+      #  then
+      #  # massage
+      #  wp_massage 0 "Enabling $SERVICE_FILE ..."
+      #  systemctl --user enable $SERVICE_FILE
+      #fi
       if ! timer-isenabled
         then
           # massage
