@@ -333,7 +333,7 @@ chroot-setup-users () {
 chroot-setup-network () {
   echo "NETWORK:"
   echo "Installing network base packs:(networkmanager netctl). . .  "
-  arch-chroot ${CHROOT_ROOT} pacman -S networkmanager netctl terminus-font --noconfirm
+  arch-chroot ${CHROOT_ROOT} pacman -S networkmanager netctl --noconfirm
   echo "Enabling networkmanager. . .  "
   arch-chroot ${CHROOT_ROOT} systemctl enable NetworkManager
   echo "NetworkManager status:"
@@ -382,7 +382,9 @@ chroot-setup-locale () {
   cat ${CHROOT_ROOT}/etc/locale.conf
 }
 chroot-setup-keyboard () {
-  echo "Setting up keyboard map ($KEYMAP). . ."
+  echo "Installing '$CFONT_PAC'. . ."
+  arch-chroot ${CHROOT_ROOT} pacman -S $CFONT_PAC --noconfirm
+  echo "Setting up keyboard map '$KEYMAP'. . ."
   echo "KEYMAP=$KEYMAP" >> ${CHROOT_ROOT}/etc/vconsole.conf
   echo "FONT=$CFONT" >> ${CHROOT_ROOT}/etc/vconsole.conf
   echo "${CHROOT_ROOT}/etc/vconsole.conf:"
