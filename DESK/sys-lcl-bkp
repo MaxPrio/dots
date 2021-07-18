@@ -1,0 +1,240 @@
+#!/bin/bash
+
+usage () {
+  cat << EOF
+
+USAGE: sudo $0 [COMMANDS|OPTIONS] COMMAND [COMMANDS|OPTIONS]
+
+  COMMANDS: all              Short for 'boot root home'
+            boot             Back up or restore '/boot' directory.
+            root             Back up or restore '/root' directory.
+            home             Back up or restore '/home' directory.
+
+  OPTIONS:  -destination    {PATH/TO/BACK-UP/DIRECTORY/}
+                            (default path is '/home/fs-bkp/')
+                         
+            -restore         Switch source and destination paths,
+                             in the rsync command line.
+            -n|--dry-run     Add '--dry-run' to the rsync command line.
+            -h|--help        Print this massage.
+
+  EXAMPLE: '$0 --restore boot root --destination '/mnt/usb/system-backup/' -n'
+
+EOF
+
+}
+
+# is root?
+[ `id -u` != 0 ] \
+  && echo "This script needs superuser privileges. EXIT." \
+  && exit 1
+
+# defaults
+BKP_PATH_DFLT='/home/fs-bkp/'
+ROOT_PATH='/'
+TO_RESTORE=false
+SYNC_ALL=false
+SYNC_BOOT=false
+SYNC_ROOT=false
+SYNC_HOME=false
+SMTH_TO_DO=false
+DRY_RUN=''
+THE_SCRIPT_SIG='.bkp-script-signature' # make sure to restore a ligit back-up.
+
+# command line crawler.
+while [ ! -z $1 ]
+  do
+    case $1 in
+      --destination )
+        shift
+        BKP_PATH="${1%/}/" # make sure ".../"
+        shift
+        ;;
+      all )
+        SYNC_ALL=true
+        SMTH_TO_DO=true
+        shift
+        ;;
+      boot )
+        SYNC_BOOT=true
+        SMTH_TO_DO=true
+        shift
+        ;;
+      root )
+        SYNC_ROOT=true
+        SMTH_TO_DO=true
+        shift
+        ;;
+      home )
+        SYNC_HOME=true
+        SMTH_TO_DO=true
+        shift
+        ;;
+      --restore )
+        TO_RESTORE=true
+        shift
+        ;;
+      -n|--dry-run )
+        DRY_RUN='--dry-run'
+        shift
+        ;;
+      -h|--help )
+        usage
+        exit 1
+        shift
+        ;;
+      * )
+        echo "Uknown parameter '$1'."
+        usage
+        exit 1
+        ;;
+    esac
+done
+
+# no commands.
+if ! $SMTH_TO_DO
+  then
+    usage
+    exit 1
+fi
+
+# setting up destination
+if [ -z $BKP_PATH ]
+  then
+    BKP_PATH="$BKP_PATH_DFLT"
+    [ ! -d $BKP_PATH ] && mkdir -p "$BKP_PATH" # auto create only default
+fi
+[ ! -d $BKP_PATH ] \
+  && echo "Destination path '$BKP_PATH' doesn't exist." \
+  && usage \
+  && exit 1
+
+# if restore, switch src and dest.
+if $TO_RESTORE
+  then
+    TGT_PATH="$ROOT_PATH"
+    SRC_PATH="$BKP_PATH"
+  else
+    TGT_PATH="$BKP_PATH"
+    SRC_PATH="$ROOT_PATH"
+fi
+
+# Functions
+#----------
+
+sync-boot () {
+
+### DEBUGING WRAP
+#cat << EOF
+#Syncing boot...
+#EXECUTING:
+#
+
+if ! $TO_RESTORE || [ -f ${BKP_PATH}boot/${THE_SCRIPT_SIG} ] 
+then
+rsync -aAX $DRY_RUN --delete --info=progress2 \
+--exclude=\
+{\
+"${BKP_PATH}boot/${THE_SCRIPT_SIG}"\
+} \
+${SRC_PATH}boot/ ${TGT_PATH}boot/
+fi
+
+$TO_RESTORE || \
+  [ ! -z $DRY_RUN ] || \
+  date > "${BKP_PATH}boot/${THE_SCRIPT_SIG}"
+
+### DEBUGING WRAP
+#EOF
+
+}
+
+sync-root () {
+
+### DEBUGING WRAP
+#cat << EOF
+#Syncing root...
+#EXECUTING:
+
+if ! $TO_RESTORE || [ -f ${BKP_PATH}${THE_SCRIPT_SIG} ] 
+then
+rsync -aAX $DRY_RUN --delete --info=progress2 \
+--exclude=\
+{\
+"/boot/*"\
+,"/home/*"\
+,"/swapfile"\
+,"/dev/*"\
+,"/proc/*"\
+,"/sys/*"\
+,"/tmp/*"\
+,"/run/*"\
+,"/mnt/*"\
+,"/media/*"\
+,"/lost+found"\
+,"${BKP_PATH}${THE_SCRIPT_SIG}"\
+} \
+${SRC_PATH} ${TGT_PATH}
+fi
+
+$TO_RESTORE || \
+  [ ! -z $DRY_RUN ] || \
+  date > "${BKP_PATH}${THE_SCRIPT_SIG}"
+
+### DEBUGING WRAP
+#EOF
+
+}
+
+sync-home () {
+
+### DEBUGING WRAP
+#cat << EOF
+#Syncing home...
+#'EXECUTING:
+
+if ! $TO_RESTORE || [ -f ${BKP_PATH}home/${THE_SCRIPT_SIG} ] 
+  then
+rsync -aAX $DRY_RUN --delete --info=progress2 \
+--exclude=\
+{\
+"/home/fs-bkp/*"\
+,"/home/*/Videos/*"\
+,"/home/*/Downloads/*"\
+,"/home/*/temp/*"\
+,"/home/*/usb*/*"\
+,"/home/*/.cache/chromium/*"\
+,"/home/*/.local/share/Trash/*"\
+,"${BKP_PATH}home/${THE_SCRIPT_SIG}"\
+} \
+${SRC_PATH}home/ ${TGT_PATH}home/
+  else
+    echo "Can't find '$THE_SCRIPT_SIG' file. Conselling..."
+fi
+
+
+$TO_RESTORE || \
+  [ ! -z $DRY_RUN ] || \
+  date > "${BKP_PATH}home/${THE_SCRIPT_SIG}"
+
+### DEBUGING WRAP
+#EOF
+
+}
+
+# Main
+#-------
+
+if $SYNC_ALL || $SYNC_BOOT
+  then
+    sync-boot
+fi
+if $SYNC_ALL || $SYNC_ROOT
+  then
+    sync-root
+fi
+if $SYNC_ALL || $SYNC_HOME
+  then
+    sync-home
+fi
+
