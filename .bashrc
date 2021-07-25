@@ -55,3 +55,6 @@ alias dotsc='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME commit -m
 alias dotsuc='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME commit -m "unspecified commit"'
 alias dotsp='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME push github main'
 alias dotsaa='gitaa dots'
+
+# vim-iced (closure)
+export PATH="~/.vim/plugged/vim-iced/bin/:$PATH"

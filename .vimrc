@@ -14,15 +14,20 @@
 
 
 call plug#begin('~/.vim/plugged')
+    " On-demand loading
+    "Plug 'tpope/vim-fireplace', { 'for': 'clojure' }
+    " Plugin outside ~/.vim/plugged with post-update hook
+    "Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 
     Plug 'junegunn/vim-plug'
     Plug 'lyokha/vim-xkbswitch'
     Plug 'christoomey/vim-system-copy'
-    " On-demand loading
-    "Plug 'tpope/vim-fireplace', { 'for': 'clojure' }
-
-    " Plugin outside ~/.vim/plugged with post-update hook
-    "Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+    "fzf
+    Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+    Plug 'junegunn/fzf.vim'
+    "for closure
+    Plug 'guns/vim-sexp',    {'for': 'clojure'}
+    Plug 'liquidz/vim-iced', {'for': 'clojure'}
 
 
 call plug#end()
@@ -34,8 +39,9 @@ call plug#end()
     set backspace=indent,eol,start
     set lazyredraw          " redraw only when we need to.
 
-"PLAGINS SPECIFIC
-"
+
+" FOR PLAGINS
+
 "vim-xkbswitch
     let g:XkbSwitchEnabled = 1
     let g:XkbSwitchIMappings = ['ru']
@@ -56,8 +62,26 @@ call plug#end()
         "let g:system_copy_silent = 1
     "
 
+" vim-iced
+    let g:iced_enable_default_key_mappings = v:true
+
 "INTERFACE 
+    set ruler
+    set relativenumber
+    set number
+    set linebreak
+    set showbreak=↪❭
+    set visualbell
+    set cmdheight=2
+    set showcmd             " show command in bottom bar
+    set so=7    "Set 7 lines to the cursor
+    set wildmenu            " visual autocomplete for command menu
+    "set list               "show hidden chars
+    set listchars=tab:▱▱,eol:¬,trail:~,space:‿
     
+    let loaded_matchparen = 0
+    set showmatch
+
     hi clear CursorLine
     hi link CursorLine CursorColumn
     hi clear CursorLineNr
@@ -73,23 +97,6 @@ call plug#end()
     endfunction
     map <silent><leader>cl :call ToggleCurline()<CR>
 
-
-
-
-
-
-    set ruler
-    set relativenumber
-    set number
-    set linebreak
-    set showbreak=↪❭
-    set visualbell
-    set cmdheight=2
-    set showcmd             " show command in bottom bar
-    set so=7    "Set 7 lines to the cursor
-    set wildmenu            " visual autocomplete for command menu
-    "set list               "show hidden chars
-    set listchars=tab:▱▱,eol:¬,trail:~,space:‿
 
 "LINES indentation, tabs, folding.
     "

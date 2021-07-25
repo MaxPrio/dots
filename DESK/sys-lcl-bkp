@@ -135,7 +135,7 @@ then
 rsync -aAX $DRY_RUN --delete --info=progress2 \
 --exclude=\
 {\
-"${BKP_PATH}boot/${THE_SCRIPT_SIG}"\
+"${THE_SCRIPT_SIG}"\
 } \
 ${SRC_PATH}boot/ ${TGT_PATH}boot/
 fi
@@ -161,18 +161,18 @@ then
 rsync -aAX $DRY_RUN --delete --info=progress2 \
 --exclude=\
 {\
-"/boot/*"\
-,"/home/*"\
-,"/swapfile"\
-,"/dev/*"\
-,"/proc/*"\
-,"/sys/*"\
-,"/tmp/*"\
-,"/run/*"\
-,"/mnt/*"\
-,"/media/*"\
-,"/lost+found"\
-,"${BKP_PATH}${THE_SCRIPT_SIG}"\
+"boot/*"\
+,"home/*"\
+,"swapfile"\
+,"dev/*"\
+,"proc/*"\
+,"sys/*"\
+,"tmp/*"\
+,"run/*"\
+,"mnt/*"\
+,"media/*"\
+,"lost+found"\
+,"${THE_SCRIPT_SIG}"\
 } \
 ${SRC_PATH} ${TGT_PATH}
 fi
@@ -195,17 +195,18 @@ sync-home () {
 
 if ! $TO_RESTORE || [ -f ${BKP_PATH}home/${THE_SCRIPT_SIG} ] 
   then
-rsync -aAX $DRY_RUN --delete --info=progress2 \
+#rsync -aAX $DRY_RUN --delete --info=progress2 \
+rsync -aAXvn $DRY_RUN --delete \
 --exclude=\
 {\
-"/home/fs-bkp/*"\
-,"/home/*/Videos/*"\
-,"/home/*/Downloads/*"\
-,"/home/*/temp/*"\
-,"/home/*/usb*/*"\
-,"/home/*/.cache/chromium/*"\
-,"/home/*/.local/share/Trash/*"\
-,"${BKP_PATH}home/${THE_SCRIPT_SIG}"\
+"fs-bkp/*"\
+,"*/Videos/*"\
+,"*/Downloads/*"\
+,"*/temp/*"\
+,"*/usb*/*"\
+,"*/.cache/chromium/*"\
+,"*/.local/share/Trash/*"\
+,"${THE_SCRIPT_SIG}"\
 } \
 ${SRC_PATH}home/ ${TGT_PATH}home/
   else

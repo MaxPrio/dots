@@ -1,0 +1,44 @@
+
+yay -Syy
+yay -S rlwrap
+
+# java
+yay -S jdk11-openjdk
+. /etc/profile
+
+# closure
+curl -O https://download.clojure.org/install/linux-install-1.10.3.855.sh
+chmod +x linux-install-1.10.3.855.sh
+sudo ./linux-install-1.10.3.855.sh
+
+# lein
+curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > lein
+sudo mv lein /usr/local/bin/lein
+sudo chmod +x /usr/local/bin/lein
+lein version
+
+# vim
+~/.vimrc
+---------
+" VPLUG
+
+  "For selecting one from multiple candidates
+  "(e.g. selecting a ns which you’d like to add)
+  Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+  Plug 'junegunn/fzf.vim'
+
+  " Requires
+  Plug 'guns/vim-sexp',    {'for': 'clojure'}
+  Plug 'liquidz/vim-iced', {'for': 'clojure'}
+
+
+" Enable vim-iced's default key mapping
+let g:iced_enable_default_key_mappings = v:true
+---------
+:PlugInstall
+
+~/.bashrc
+---------
+# vim-iced (for closure)
+export PATH="~/.vim/plugged/vim-iced/bin/:$PATH"
+---------
