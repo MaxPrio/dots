@@ -195,8 +195,7 @@ sync-home () {
 
 if ! $TO_RESTORE || [ -f ${BKP_PATH}home/${THE_SCRIPT_SIG} ] 
   then
-#rsync -aAX $DRY_RUN --delete --info=progress2 \
-rsync -aAXvn $DRY_RUN --delete \
+rsync -aAX $DRY_RUN --delete --info=progress2 \
 --exclude=\
 {\
 "fs-bkp/*"\
