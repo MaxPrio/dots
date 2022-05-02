@@ -74,6 +74,21 @@ $ gpg --delete-secret-keys user@example.com
 $ gpg --import secret_subkeys.gpg
 $ rm secret_subkeys.gpg
 ```
+#### To reimport the Primary Privet Key. (to be able to edit the keys)
+```sh
+$ gpg --decrypt secret_subkeys.gpg.sec.asc > secret_subkeys.gpg.sec
+$ gpg --allow-secret-key-import --import secret_subkeys.gpg.sec
+$ rm secret_subkeys.gpg.sec
+```
+Remove the Primary Privet Key again.
+
+#### To change the expiration date of a GPG key:
+```sh
+$ gpg --expert --edit-key user@example.com
+```
+Commands: list; toggle; key; expire; q.
+
+
 ## SSH Authentication
 ### Enable SSH support in gpg-agent:
 ```sh

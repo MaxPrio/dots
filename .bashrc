@@ -14,8 +14,14 @@ esac
 #path
 export PATH="~/.bin:$PATH"
 
+#vars
+export EDITOR="vim"
+
 #Prompt
 PS1='\[\e[01;38;5;240m\]\u\[\e[01;38;5;160m\]⚡\[\e[01;38;5;240m\]| \[\e[01;38;5;31m\]\w\[\e[01;38;5;240m\]\n↪        \[\e[01;38;5;28m\]\$ \[\033[00m\]'
+
+# keyboard layouts
+setxkbmap -layout us,ru -option grp:alt_shift_toggle
 
 # primary aliases
 alias shtdn='shutdown -h now'
