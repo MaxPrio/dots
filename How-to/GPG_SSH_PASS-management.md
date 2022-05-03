@@ -72,15 +72,19 @@ $ gpg -a --gen-revoke user@example.com > user.gpg.revoke
 $ gpg -a --export-secret-subkeys user@example.com > secret_subkeys.gpg
 $ gpg --delete-secret-keys user@example.com
 $ gpg --import secret_subkeys.gpg
-$ rm secret_subkeys.gpg
 ```
 #### To reimport the Primary Privet Key. (to be able to edit the keys)
 ```sh
-$ gpg --decrypt secret_subkeys.gpg.sec.asc > secret_subkeys.gpg.sec
 $ gpg --allow-secret-key-import --import secret_subkeys.gpg.sec
-$ rm secret_subkeys.gpg.sec
 ```
-Remove the Primary Privet Key again.
+#### Back up 
+```sh
+$ gpg -o user.gpg.keys --export-options backup --export-secret-keys keyid
+```
+#### Restore
+```sh
+$ gpg --import-options restore --import user.gpg.keys
+```
 
 #### To change the expiration date of a GPG key:
 ```sh
