@@ -4,7 +4,7 @@
 ## GPG
 ### Generate the Primary Key
 ```sh
-$ gpg --expert --full-gen-key
+gpg --expert --full-gen-key
 ```
 > Your selection? 8  
 > Your selection? s  
@@ -21,13 +21,13 @@ $ gpg --expert --full-gen-key
 >   
 #### Check
 ```sh
-$ gpg -k
-$ gpg -K
+gpg -k
+gpg -K
 ```
 ### Add subkeys  
 
 ```sh
-$ gpg --expert --edit-key user@example.com
+gpg --expert --edit-key user@example.com
 ```
 
 Repeat this addkey process for **Encrypt,Sign,Authenticate**  
@@ -57,41 +57,51 @@ gpg> save
 ```
 ### Back Up the Primary privet key
 ```sh
-$ gpg -a --export-secret-key user@example.com > user.gpg.sec.key
+gpg -a --export-secret-key user@example.com > user.gpg.sec.key
 ```
 > Enter passphrase:  
 ### Generate and back up revoke.
 ```sh
-$ gpg -a --gen-revoke user@example.com > user.gpg.revoke
+gpg -a --gen-revoke user@example.com > user.gpg.revoke
 ```
 > Your decision? 1  
 > Is this okay? (y/N) y  
 > Enter passphrase:  
 ### Remove the Primary Privet Key
 ```sh
-$ gpg -a --export-secret-subkeys user@example.com > secret_subkeys.gpg
-$ gpg --delete-secret-keys user@example.com
-$ gpg --import secret_subkeys.gpg
+gpg -a --export-secret-subkeys user@example.com > secret_subkeys.gpg
+gpg --delete-secret-keys user@example.com
+gpg --import secret_subkeys.gpg
 ```
 #### To reimport the Primary Privet Key. (to be able to edit the keys)
 ```sh
-$ gpg --allow-secret-key-import --import secret_subkeys.gpg.sec
+gpg --allow-secret-key-import --import secret_subkeys.gpg.sec
 ```
 #### Back up 
 ```sh
-$ gpg -o user.gpg.keys --export-options backup --export-secret-keys keyid
+gpg -o user.gpg.keys --export-options backup --export-secret-keys keyid
+gpg --export-ownertrust > user.gpg.trust
+
 ```
 #### Restore
 ```sh
-$ gpg --import-options restore --import user.gpg.keys
+gpg --import-options restore --import user.gpg.keys
+gpg --import-ownertrust user.gpg.trust
 ```
 
 #### To change the expiration date of a GPG key:
 ```sh
-$ gpg --expert --edit-key user@example.com
+gpg --expert --edit-key user@example.com
 ```
 Commands: list; toggle; key; expire; q.
 
+#### Ultimately trust the key
+
+```sh
+gpg --edit-key keyid
+```
+> gpg> trust
+> Your decision? 5 (Ultimate trust)
 
 ## SSH Authentication
 ### Enable SSH support in gpg-agent:
@@ -150,7 +160,7 @@ ssh-copy-id -f -i ~/.ssh/user.gpg.ssh.pub user@server
 ```
 #### or by hand (github):
 ```sh
-$ echo -n "$(cat ~/.ssh/maxprio.gpg.ssh.pub )" | xsel -i -b
+echo -n "$(cat ~/.ssh/maxprio.gpg.ssh.pub )" | xsel -i -b
 ```
 ### Authorize incoming connection from <CLIENT>
 ```sh
