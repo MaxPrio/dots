@@ -17,7 +17,12 @@ gpg --armor --gen-random 1 16
  ```sh
 gpg --armor --export-secret-keys KEY_ID(email) | gpg --armor --symmetric --output user.gpg.sec.asc
  ```
-- transter the file to the device, using the FTP server app.
+- enter the passphrase, then the gpg password, then the passphrase again.
+
+- transter the file to the device.
+- (an FTP server app on the device, and FileZilla)
+
+- FTP client:
  ```sh
 ftp 192.168.1.141 2121
 Name (192.168.1.141:user): ftp
@@ -27,36 +32,18 @@ ftp> put user.gpg.sec.asc
 ftp> bye
  ```
 - import the keyring from the file with OpenKeychain
+- (manage my keyes)
+- Allow the Password Stare app in Openkeychain
+
 ### Password Store 
 ---
 #### Setting up sync through a local bare git repo
 - Setup a local bare git repository for pass
  ```sh
-git init --bare ~/.pass.git.repo
+git init --bare ~/.password-store.git
 pass git init
-pass git remote add origin ssh://user@localhost:/home/user/.pass.git.repo
- ```
-- do not use the gpg auth subkey
- ```sh
-sudo  pacman -Sy openssh
-ssh-keygen -m PEM -t rsa -b 4096
- ```
-> Enter file in which to save the key (/home/user/.ssh/id_rsa): pass_store
-- Authorize the pub key for incomming conection and push
- ```sh
-cat ~/.ssh/id_rsa/pass_store.pub >> ~/.ssh/authorized_keys
-pass git push origin master
- ```
-   - **a note:** use pull,push rather than just push for sync
- - copy the ssh key to the android device, using the FTP server app
- ```sh
-cd ~/.ssh/id_rsa/
-ftp 192.168.1.141 2121
-Name (192.168.1.141:user): ftp
-Password: ftp
-ftp> cd Download/
-ftp> put pass_srore
-ftp> bye
+pass git remote add main /home/user/.password-store.git
+pass git push origin main
  ```
 - password store app: Settings-Edit git server settings
 > **Username:** USER	
@@ -67,8 +54,7 @@ hostname -I
  ```
 > **Port:** 22
 > **Repo path:** absolute location of the git repo
-> **Authentication mode:** SSH key
-- **password store app:** Settings-Import SSH key _(from the file)_
+> **Authentication mode:** OPENKEYCHAIN
 - Select **OpenKeychain** as OpenPGP provider
 - Select **clone from the server** while adding a new repository
 - **a note:** use sync command, rather than pull or push ones 

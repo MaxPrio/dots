@@ -24,7 +24,7 @@ fi
 ((ndx--))
 
 shopt -s nullglob # To avoid expantion to *.extention
-for vf in *.mp4 *.mkv *.avi
+for vf in *.mp4 *.mkv *.avi *.mp3
 do
     ((ndx++))
     [ $ndx -le 9 ] && nndx="0$ndx" || nndx=$ndx
