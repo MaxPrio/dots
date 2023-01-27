@@ -5,7 +5,7 @@
 # Exports contents of the default or provided directory to ./<DIRECTORY_NAME>.tar
 # Imports from the default or provided file to ./<FILE_NAME (cut off '.tar')>/
 
-# All the .gpg files are reencrypted with a symmetric key, to be able to import to another gpg_id.
+# All the .gpg files are reencrypted with a symmetric key, so as to be able to import to another gpg_id.
 
 
 PS_FILE=passwords.aes    # a single file for all reencrypted .gpg files.
@@ -101,19 +101,43 @@ if [[ ! -z "$PS_PATH" ]]
         read -p "  ??? [y|any]:" -n 1 -r
         echo ''
         [[ $REPLY =~ ^[Yy]$ ]] || exit 1
-        echo ''
-        echo 'GPG ID LIST:'
-        gpg -k | grep uid | tr -s ' ' | rev | cut -d ' ' -f 1,2 | rev
-        echo ''
-        read -p "Enter the gpg_id: "
-        GPG_ID=$REPLY
 
+        # choosing an existing gpg id
+         echo ''
+         echo 'GPG ID LIST:' 
+         LINDX=0
+         while read C_GPG_ID
+           do
+             ((++LINDX))
+             echo "    #$LINDX - $C_GPG_ID"
+           done < <( gpg -k | grep uid | tr -s ' ' | rev | cut -d ' ' -f 1,2 | rev)
+
+         echo '' 
+         read -p "Choose the gpg_id (1-$LINDX)(default 1): "
+         [[ -z  $REPLY ]] \
+           && CH_LINE=1 \
+           || CH_LINE=$REPLY
+
+         LINDX=0
+         GPG_ID=''
+         while read C_GPG_ID
+           do
+             ((++LINDX))
+             [[ $LINDX -eq $CH_LINE ]] \
+               && GPG_ID=$C_GPG_ID && break
+           done < <( gpg -k | grep uid | tr -s ' ' | rev | cut -d ' ' -f 2 | rev)
+         echo '' 
+         [[ -z  $GPG_ID ]] \
+           && echo "no gpg id is defined. EXIT..." && exit 1
+         echo "GPG ID - $GPG_ID" 
+
+        # Extracting
         echo "Extracting $PS_ARCH . . ."
         mkdir ./$PS_DIR
         tar -xf ./$PS_ARCH -C ./$PS_DIR
 
         cd $PS_DIR
-        read -sp "Enter archive passphrase: " ARCHPSWD
+        read -sp "Enter the passphrase for encrypted data: " ARCHPSWD
         echo ''
         echo "Recreating gpg files . . ."
         while read line
