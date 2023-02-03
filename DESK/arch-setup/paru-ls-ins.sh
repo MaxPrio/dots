@@ -1,4 +1,5 @@
 #!/bin/bash
+pkgs_file="pkgs.txt"
 
 ins-paru () {
 sudo pacman -S --noconfirm --needed base-devel git
@@ -25,7 +26,7 @@ sudo pacman -S --noconfirm --needed which
 [ $( which paru ) ]\
   ||  ins-paru
 
-cat pac-list.txt | fout-hash |\
+cat "$pkgs_fil" | fout-hash |\
   while read pkgname
     do
       echo "INSTALLING: ${pkgname}"
