@@ -1,6 +1,5 @@
 "VPLUG
 "-----
-
 " Install vim-plug if not found
 "if empty(glob('~/.vim/autoload/plug.vim'))
   "silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
@@ -45,6 +44,7 @@ call plug#end()
 "vim-xkbswitch
     let g:XkbSwitchEnabled = 1
     let g:XkbSwitchIMappings = ['ru']
+
 
 "system-copy
     "[cp|cv]+motion
@@ -140,6 +140,16 @@ call plug#end()
     nnoremap [b :bp<CR>
     nnoremap [[b <C-^>
     nnoremap []b :ls<CR>:b
+
+    "Two new text objects: al & il 
+    "Both do not include the newline in the object.
+      "vil selects the printable contents of the line (like ^vg_),
+      "val selects the entire line contents (like 0v$h).
+    vnoremap al :<C-U>normal 0v$h<CR>
+    omap al :normal val<CR>
+    vnoremap il :<C-U>normal ^vg_<CR>
+    omap il :normal vil<CR>
+
 
 "SPELL CHECK
 "set spelllang=en
