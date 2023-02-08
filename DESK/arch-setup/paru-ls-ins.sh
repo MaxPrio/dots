@@ -1,5 +1,8 @@
 #!/bin/bash
 pkgs_file="pkgs.txt"
+[ -d $pkgs_file ]\
+  || echo "error: no $pkgs_file."\
+     && exit 1
 
 ins-paru () {
 sudo pacman -S --noconfirm --needed base-devel git
@@ -26,7 +29,7 @@ sudo pacman -S --noconfirm --needed which
 [ $( which paru ) ]\
   ||  ins-paru
 
-cat "$pkgs_fil" | fout-hash |\
+cat "$pkgs_file" | fout-hash |\
   while read pkgname
     do
       echo "INSTALLING: ${pkgname}"
