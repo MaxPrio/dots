@@ -4,7 +4,8 @@ echo -ne '
 SETTING-UP VIM.
 ---------------'
 # just in case
-#paru -s --noconfirm --needed curl vim xkb-switch
+pacman -S --noconfirm --needed curl vim
+paru -S --noconfirm --needed xkb-switch
 
 # a finction,to cut out a function
 cut_core () {
@@ -19,7 +20,7 @@ setting-up the plugin manager "vim-plug"
 plug_url="https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
 vimrc_url="https://raw.githubusercontent.com/maxprio/dots/main/.vimrc"
 
-# download plug.vim if not found
+# if not found, download plug.vim 
 [ ! -f '~/.vim/autoload/plug.vim' ]\
     && curl -fLo ~/.vim/autoload/plug.vim --create-dirs "$plug_url"
 
@@ -34,7 +35,7 @@ echo -ne 'creating the temp config...  '
 # just in case
 [ -f ~/.vimrc ] && mv ~/.vimrc ~/.vimrc.bak
 # begin the local config with the autocommand on enter:
-# run PlugInstall if there are missing plugins and quit
+# "if there are missing plugins run PlugInstall and then quit"
 cat << 'EOF' > ~/.vimrc
 autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
   \| PlugInstall --sync | source $MYVIMRC | quitall
@@ -58,7 +59,7 @@ echo -ne '
 cleaning up...  '
 rm ~/.vimrc
 [ -f ~/.vimrc.buk ]\
-  && mv ~/.vimrc.tmp  ~/.vimrc
+  && mv ~/.vimrc.buk  ~/.vimrc
 
 echo -ne ' Done!
 '

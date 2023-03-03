@@ -1,0 +1,63 @@
+# setting up pcm devices
+# for using in music players
+# for direct streaming to audio outputs
+# (does not affect default settings)
+#
+# SPDIF0plug
+#
+pcm.SPDIF0hw  {
+  type hw
+  card 0
+  device 0
+  }
+
+pcm.SPDIF0plug {
+	type plug 
+	slave.pcm SPDIF0hw
+}
+
+ctl.SPDIF0plug {
+	type plug 
+	slave.pcm SPDIF0hw
+}
+
+# USB1plug
+
+pcm.USB1hw  {
+  type hw
+  card 1
+  device 0
+  }
+
+pcm.USB1plug {
+	type plug 
+	slave.pcm USB1hw
+}
+
+ctl.USB1plug {
+	type plug 
+	slave.pcm USB1hw
+}
+
+#_
+# alsa pcm device "alsadirect"
+# links to another,
+# depending on the env.var. "ALSA_DIRECT"
+
+pcm.alsadirect {
+    type plug
+    slave.pcm {
+        @func getenv
+        vars [ ALSA_DIRECT ]
+        default "SPDIF0plug "
+    }
+}
+
+ctl.alsadirect {
+    type plug
+    slave.pcm {
+        @func getenv
+        vars [ ALSA_DIRECT ]
+        default "SPDIF0plug "
+    }
+}

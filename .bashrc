@@ -16,6 +16,9 @@ export PATH="~/.bin:$PATH"
 
 #vars
 export EDITOR="vim"
+  # sound fix for music ( look in ~/.asoundrc ) 
+export ALSA_DIRECT="SPDIF0plug"
+#export ALSA_DIRECT="USB1plug"
 
 #Prompt
 PS1='\[\e[01;38;5;240m\]\u\[\e[01;38;5;160m\]⚡\[\e[01;38;5;240m\]| \[\e[01;38;5;31m\]\w\[\e[01;38;5;240m\]\n↪        \[\e[01;38;5;28m\]\$ \[\033[00m\]'
@@ -54,7 +57,7 @@ gpg-connect-agent updatestartuptty /bye >/dev/null
 alias gits='/usr/bin/git status'
 alias gitc='/usr/bin/git commit =m '
 alias gitp='/usr/bin/git push github main'
-# dots: a bare git repository for some (added) home directary files
+# dots: a bare git repository for some (added) home directory files
 alias dots='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME'
 alias dotss='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME status'
 alias dotsc='/usr/bin/git --git-dir=$HOME/.dots.git/ --work-tree=$HOME commit -m '
